@@ -28,7 +28,7 @@ class TaskThreadSimulation extends Thread {
 
     @Override
     public void run() {
-        SimpleLock lock = new SimpleLock().connect();
+        AbstractLock lock = new SimpleLock().connect();
         if (lock.tryLock("taskLock")) {
             System.out.println(threadName + "has got the lock and task begin...");
             try {

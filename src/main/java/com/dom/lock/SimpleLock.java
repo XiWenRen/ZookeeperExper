@@ -2,6 +2,7 @@ package com.dom.lock;
 
 import com.dom.basic.ZkClient;
 import com.dom.utils.Properties;
+import com.google.common.base.Strings;
 
 /**
  * Date: 16/11/24
@@ -13,17 +14,12 @@ import com.dom.utils.Properties;
  * 3.所有没有创建成功的客户端关闭连接
  * 4.获取到锁的客户端执行完任务,关闭连接,EPHEMERAL节点自动删除
  */
-public class SimpleLock {
+public class SimpleLock extends AbstractLock {
 
     public static final String LOCK_PATH = "lock";
 
-    private ZkClient client;
-
-    public SimpleLock connect() {
-        client = new ZkClient();
-        client.connect(Properties.CON_PATH_1);
-        if(!client.exist(LOCK_PATH)) client.createPersistentNode(LOCK_PATH, "");
-        return this;
+    public AbstractLock connect() {
+        return super.connect(LOCK_PATH);
     }
 
     /**
@@ -32,19 +28,13 @@ public class SimpleLock {
      * @param lockName 唯一的任务标识
      * @return 是否获取锁
      */
+    @Override
     public boolean tryLock(String lockName) {
         lockName = LOCK_PATH + ZkClient.SP + lockName;
         if(client.exist(lockName)) return false;
-        boolean b = client.createEphemeralNode(lockName, "");
-        if(!b) client.close();
-        return b;
+        String lockPath = client.createEphemeralNode(lockName, null);
+        boolean b = Strings.isNullOrEmpty(lockPath);
+        if(b) client.close();
+        return !b;
     }
-
-    /**
-     * 当获取到锁的客户端执行完任务之后,关闭连接
-     */
-    public void releaseLock() {
-        client.close();
-    }
-
 }
