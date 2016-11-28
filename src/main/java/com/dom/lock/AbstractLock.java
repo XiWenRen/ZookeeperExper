@@ -3,6 +3,8 @@ package com.dom.lock;
 import com.dom.basic.ZkClient;
 import com.dom.utils.Properties;
 
+import java.util.concurrent.CountDownLatch;
+
 /**
  * Date: 16/11/25
  * Author: dom
@@ -11,6 +13,7 @@ import com.dom.utils.Properties;
 public abstract class AbstractLock {
 
     protected ZkClient client;
+    protected CountDownLatch latch;//用于阻塞线程执行
 
     public AbstractLock() {
     }

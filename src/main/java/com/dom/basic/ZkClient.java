@@ -113,8 +113,12 @@ public class ZkClient implements Watcher {
     }
 
     public Stat getStat(String path) {
+        return getStat(path, null);
+    }
+
+    public Stat getStat(String path, Watcher watcher) {
         try {
-            return zooKeeper.exists(dealPath(path), false);
+            return zooKeeper.exists(dealPath(path), watcher);
         } catch (KeeperException | InterruptedException e) {
             System.out.println("获取节点信息失败. cause:" + e.getMessage());
         }
@@ -141,5 +145,6 @@ public class ZkClient implements Watcher {
     @Override
     public void process(WatchedEvent event) {
         //doNothing
+        System.out.println("process");
     }
 }

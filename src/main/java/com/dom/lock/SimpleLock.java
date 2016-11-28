@@ -29,7 +29,7 @@ public class SimpleLock extends AbstractLock {
      * @return 是否获取锁
      */
     @Override
-    public boolean tryLock(String lockName) {
+    public synchronized boolean tryLock(String lockName) {
         lockName = LOCK_PATH + ZkClient.SP + lockName;
         if(client.exist(lockName)) return false;
         String lockPath = client.createEphemeralNode(lockName, null);
