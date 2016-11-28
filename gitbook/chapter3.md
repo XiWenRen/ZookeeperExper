@@ -1,0 +1,86 @@
+# 环境搭建
+
+[zk首页](http://zookeeper.apache.org/)，[下载地址](http://mirrors.cnnic.cn/apache/zookeeper/)
+
+#### 1. 准备
+
+找一个版本下载后解压到工作目录下，比如我的`mac`环境：`Users/dom/Document/work/enviroment/zookeeper-3.4.8`
+，进入`/conf`目录,将`zoo_exampler.cfg`改名为`zoo.cfg`，这就是zk的启动配置文件了。
+
+#### 2. 单机环境启动
+
+可以稍微修改一下配置文件，部分说明如下
+
+```python
+# 作为zk服务器之间或客户端与服务器之间维持心跳的时间间隔，每隔一个tickTime就会发送一个心跳请求确认对方是否存活，使用默认即可
+tickTime=2000
+# zk保存数据的目录，默认情况下，写数据的日志文件也保存在这个目录里
+# 此处不要使用默认的配置，可以指定绝对目录，也可以如下写法
+dataDir=../../data
+# 客户端连接zk服务器的端口
+clientPort=2181
+```
+
+然后就可以启动了，回到zk目录下，终端输入`bin/zkServer.sh start`即可启动zk服务。
+继续启动客户端，终端输入`bin/zkCli.sh`
+
+#### 3.单机伪集群配置
+
+伪集群模式没有实战意义，它的存在应该是为了让我们快速了解和实验zk集群模式的一些特性
+复制三个zk目录，每个目录下的zoo.cfg文件配置除了单机配置之外另外添加如下内容：
+
+```python
+# 用来配置 Zookeeper 接受客户端（这里所说的客户端不是用户连接 Zookeeper 服务器的客户端，
+# 而是 Zookeeper 服务器集群中连接到 Leader 的 Follower 服务器）初始化连接时最长能忍受多少个心跳
+# 时间间隔数。当已经超过 10 个心跳的时间（也就是 tickTime）长度后 Zookeeper 服务器还没有收到
+# 客户端的返回信息，那么表明这个客户端连接失败。总的时间长度就是 5*2000=10 秒 
+initLimit=5
+# 标识 Leader 与 Follower 之间发送消息，请求和应答时间长度，
+# 最长不能超过多少个 tickTime 的时间长度，总的时间长度就是 2*2000=4 秒 
+syncLimit=2 
+# 伪集群模式下三个server的clientPort必须是不同的，而真实环境中的port最好相同
+clientPort=2181
+# server.n=host:prot1:port2
+# server.n表示配置的服务器是第几号，这个`n`在下文会用到，host表示这个服务器的ip地址，
+# 在伪集群模式下统一为127.0.0.1，port1表示的是这个服务器与集群中的 Leader 服务器交换信息的端口；
+# D 表示的是万一集群中的 Leader 服务器挂了，需要一个端口来重新进行选举，选出一个新的 Leader，
+# 而这个端口就是用来执行选举时服务器相互通信的端口。 在伪集群模式下，每个server的端口号都不同，
+# 真实集群中每个每个server的端口号保持一致
+server.1=127.0.0.1:2777:3777
+server.2=127.0.0.1:2888:3888
+server.3=127.0.0.1:2999:3999
+
+```
+
+按照配置文件，现在的三个zk服务器目录应该如下所示\(data文件夹就是配置文件中dataDir所指的路径\)：
+
+> ├── server0 
+> │   ├── data 
+> │   └── zookeeper-3.4.8 
+> ├── server1 
+> │   ├── data 
+> │   └── zookeeper-3.4.8 
+> └── server2 
+>     ├── data 
+>     └── zookeeper-3.4.8
+
+然后在每个`data`文件夹中都新建一个名为`myid`的文件,`vi myid`里面只需要写对应server的n，就是配置文件中提到的。
+分别进入三个zk文件夹启动服务，然后随便在哪个zk文件夹下启动客户端，此处略有不同，启动命令如下：
+```shell
+bin/zkCli.sh -server 127.0.0.1:2181,127.0.0.1.2182,127.0.0.1.2183
+```
+这里可以试验一下先启动一个server，用这个命令连接，启动两个server进行连接和启动三个server进行连接。
+#### 4. 真·集群配置
+首先需要有至少3台服务器，然后把刚才的三个zk文件夹分别复制到三台服务器上，按照上面的说明修改`zoo.cfg`文件的clientPort和server.n部分配置，剩下的和伪集群一样了。
+
+#### 5. 简单的zk命令
+使用`zkCli`连接到zk服务后，就可以执行一些客户端操作了
+```shell
+create mynode 'this is my node' //创建一个节点
+stat mynode //获取mynode节点的状态信息
+stat mynode true //获取mynode节点的状态信息并添加监听，当mynode节点被删除时，zk服务器会通知到当前客户端mynode节点改变的事件
+delete mynode
+```
+
+参考：
+> [zookeeper单机伪集群配置](https://segmentfault.com/a/1190000005846249)
