@@ -1,6 +1,6 @@
 # 简介
 
-`Zookeeper`是一个分布式的，开放源码的分布式应用程序协调服务，是`Google`的`Chubby`一个开源的实现，是`Hadoop`和`Hbase`的重要组件。它是一个为分布式应用提供一致性服务的软件，提供的功能包括：配置维护、域名服务、分布式同步、组服务等。
+`Zookeeper`最早是Apache Hadoop的一个子项目，用于在分布式系统中协作多个任务。现在已经是Apache软件基金会的一个顶级项目，包括Apache HBase,Kafka,Solr,Facebook Message等主流应用都在使用zookeeper来维护分布式场景下的数据一致性，利用zookeeper提供的简单API，我们就可以实现分布式环境下的诸如群首选举，竞争锁，命名服务，配置同步等强大且稳定的功能。
 
 #### 1.Master\/Slave
 
